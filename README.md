@@ -93,3 +93,22 @@ empty_contact.valid? # => false
 <%= render @email_contact %>
 ```
 
+## 2 Model
+
+`ActiveModel::Model` includes `ActiveModel::API` to interact with Action Pack and Action View by default. It's the recommended approach to implement model-like Ruby classes. This will be extended in the future for more functionality.
+
+```ruby
+class Person
+  include ActiveModel::Model
+
+  attr_accessor :name, :age
+end
+```
+
+Usage Example:
+
+```ruby
+person = Person.new(name: 'bob', age: '18')
+person.name # => "bob"
+person.age  # => "18"
+```
