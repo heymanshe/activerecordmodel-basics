@@ -21,3 +21,75 @@
 **Custom Attributes**: Allows defining dynamic attributes in plain Ruby objects.
 
 
+# 1. API 
+
+- `ActiveModel::API` enables a class to work with `Action Pack` and `Action View`, providing essential features:
+
+  - Attribute Assignment
+
+  - Conversion
+
+  - Naming
+
+  - Translation
+
+  - Validations
+
+```ruby
+class EmailContact
+  include ActiveModel::API
+
+  attr_accessor :name, :email, :message
+  validates :name, :email, :message, presence: true
+
+  def deliver
+    if valid?
+      # Deliver email
+    end
+  end
+end
+```
+
+## Features Demonstrated
+
+```bash
+email_contact = EmailContact.new(name: "David", email: "david@example.com", message: "Hello World")
+
+email_contact.name # => "David" (Attribute Assignment)
+email_contact.to_model == email_contact # => true (Conversion)
+email_contact.model_name.name # => "EmailContact" (Naming)
+EmailContact.human_attribute_name("name") # => "Name" (Translation)
+email_contact.valid? # => true (Validations)
+
+empty_contact = EmailContact.new
+empty_contact.valid? # => false
+```
+
+## Usage in Action View
+
+### Form Helpers
+
+- Can be used with form_with:
+
+```html
+<%= form_with model: EmailContact.new do |form| %>
+  <%= form.text_field :name %>
+<% end %>
+```
+
+- Generated HTML:
+
+```html
+<form action="/email_contacts" method="post">
+  <input type="text" name="email_contact[name]" id="email_contact_name">
+</form>
+```
+
+## Rendering
+
+- Objects can be rendered using:
+
+```bash
+<%= render @email_contact %>
+```
+
