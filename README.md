@@ -163,3 +163,45 @@ Returns a hash of all the attributes with their names as keys and the values of 
 person.attributes
 # => {"name" => "Jane", "date_of_birth" => Wed, 01 Jan 2020, "active" => false}
 ```
+
+# 4. Attribute Assignment
+
+### `assign_attributes`
+- Allows setting multiple object attributes by passing a hash where keys match attribute names.
+- Example:
+
+```ruby
+class Person
+  include ActiveModel::AttributeAssignment
+  attr_accessor :name, :date_of_birth, :active
+end
+```
+
+```
+person = Person.new
+person.assign_attributes(name: "John", date_of_birth: "1998-01-01", active: false)
+puts person.name           # => "John"
+puts person.date_of_birth  # => Thu, 01 Jan 1998
+puts person.active         # => false
+```
+
+**Strong Params Integration**: If a hash responds to `permitted?` method and returns false, an `ActiveModel::ForbiddenAttributesError` is raised.
+
+```bash
+params = ActionController::Parameters.new(name: "John")
+params.permit(:name)  # Allows safe assignment
+person.assign_attributes(params)
+```
+
+## `attributes=`
+
+- Alias for `assign_attributes` method.
+
+- Both `assign_attributes` and `attributes=` accept a hash of attributes.
+
+```bash
+person.attributes = { name: "John", date_of_birth: "1998-01-01", active: false }
+puts person.name           # => "John"
+```
+
+- Parentheses for methods with hashes can be omitted in Ruby for cleaner syntax, but syntax must be correct.
