@@ -93,7 +93,7 @@ empty_contact.valid? # => false
 <%= render @email_contact %>
 ```
 
-## 2 Model
+# 2. Model
 
 `ActiveModel::Model` includes `ActiveModel::API` to interact with Action Pack and Action View by default. It's the recommended approach to implement model-like Ruby classes. This will be extended in the future for more functionality.
 
@@ -111,4 +111,55 @@ Usage Example:
 person = Person.new(name: 'bob', age: '18')
 person.name # => "bob"
 person.age  # => "18"
+```
+
+# 3. Attributes
+
+`ActiveModel::Attributes` allows you to define data types, set default values, and handle casting and serialization for plain Ruby objects. This is especially useful for form data and provides ActiveRecord-like conversions for things like dates and booleans.
+
+```ruby
+class Person
+  include ActiveModel::Attributes
+
+  attribute :name, :string
+  attribute :date_of_birth, :date
+  attribute :active, :boolean, default: true
+end
+```
+
+### Example Usage:
+
+```ruby
+person = Person.new
+
+person.name = "Jane"
+person.name # => "Jane"
+
+# Casting the string to a date
+person.date_of_birth = "2020-01-01"
+person.date_of_birth # => Wed, 01 Jan 2020
+person.date_of_birth.class # => Date
+
+# Default value
+person.active # => true
+
+# Casting the integer to a boolean
+person.active = 0
+person.active # => false
+```
+
+## 3.1 Method: `attribute_names`
+Returns an array of attribute names.
+
+```ruby
+Person.attribute_names
+# => ["name", "date_of_birth", "active"]
+```
+
+## 3.2 Method: `attributes`
+Returns a hash of all the attributes with their names as keys and the values of the attributes as values.
+
+```ruby
+person.attributes
+# => {"name" => "Jane", "date_of_birth" => Wed, 01 Jan 2020, "active" => false}
 ```
