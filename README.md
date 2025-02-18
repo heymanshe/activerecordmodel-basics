@@ -163,3 +163,123 @@ Returns a hash of all the attributes with their names as keys and the values of 
 person.attributes
 # => {"name" => "Jane", "date_of_birth" => Wed, 01 Jan 2020, "active" => false}
 ```
+
+# 4. Attribute Assignment
+
+### `assign_attributes`
+- Allows setting multiple object attributes by passing a hash where keys match attribute names.
+- Example:
+
+```ruby
+class Person
+  include ActiveModel::AttributeAssignment
+  attr_accessor :name, :date_of_birth, :active
+end
+```
+
+```
+person = Person.new
+person.assign_attributes(name: "John", date_of_birth: "1998-01-01", active: false)
+puts person.name           # => "John"
+puts person.date_of_birth  # => Thu, 01 Jan 1998
+puts person.active         # => false
+```
+
+**Strong Params Integration**: If a hash responds to `permitted?` method and returns false, an `ActiveModel::ForbiddenAttributesError` is raised.
+
+```bash
+params = ActionController::Parameters.new(name: "John")
+params.permit(:name)  # Allows safe assignment
+person.assign_attributes(params)
+```
+
+## `attributes=`
+
+- Alias for `assign_attributes` method.
+
+- Both `assign_attributes` and `attributes=` accept a hash of attributes.
+
+```bash
+person.attributes = { name: "John", date_of_birth: "1998-01-01", active: false }
+puts person.name           # => "John"
+```
+
+- Parentheses for methods with hashes can be omitted in Ruby for cleaner syntax, but syntax must be correct.
+
+
+# 5. Attribute Methods
+
+`ActiveModel::AttributeMethods`
+
+- Allows dynamic method generation for attributes, like creating methods with prefixes, suffixes, or both.
+
+```ruby
+class Person
+  include ActiveModel::AttributeMethods
+
+  attribute_method_affix prefix: "reset_", suffix: "_to_default!"
+  attribute_method_prefix "first_", "last_"
+  attribute_method_suffix "_short?"
+  
+  define_attribute_methods "name"
+  attr_accessor :name
+
+  private
+  def first_attribute(attribute)
+    public_send(attribute).split.first
+  end
+  
+  def last_attribute(attribute)
+    public_send(attribute).split.last
+  end
+
+  def attribute_short?(attribute)
+    public_send(attribute).length < 5
+  end
+
+  def reset_attribute_to_default!(attribute)
+    public_send("#{attribute}=", "Default Name")
+  end
+end
+```
+
+```bash
+person = Person.new
+person.name = "Jane Doe"
+
+puts person.first_name         # => "Jane"
+puts person.last_name          # => "Doe"
+puts person.name_short?        # => false
+puts person.reset_name_to_default!  # => "Default Name"
+```
+
+- Methods for attributes are dynamically created based on method names defined with prefixes or suffixes.
+
+- `public_send` is used to dynamically access attribute values.
+
+## `alias_attribute`
+
+- Used to create alias methods for attributes.
+
+- Both the original and alias return the same value.
+
+```ruby
+class Person
+  include ActiveModel::AttributeMethods
+  attr_accessor :name
+  
+  alias_attribute :full_name, :name
+end
+```
+
+```bash
+person = Person.new
+person.name = "Joe Doe"
+puts person.full_name  # => "Joe Doe"
+```
+
+- Alias methods can be created for any existing attributes, providing a more semantic or descriptive name.
+
+## Method Naming Restrictions
+
+- Ensure method names for dynamically generated methods follow the syntax correctly to avoid `NoMethodError`.
