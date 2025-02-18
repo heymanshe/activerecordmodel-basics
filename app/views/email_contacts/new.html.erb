@@ -1,0 +1,21 @@
+<%# <%= form_with model: @email_contact, local: true do |form| %>
+  <%# <%= form.label :name %>
+  <%# <%= form.text_field :name %>
+  <%# <%= form.label :email %>
+  <%# <%= form.text_field :email %>
+  <%# <%= form.label :message %>
+  <%# <%= form.text_area :message %>
+
+  <%# <%= form.submit "Send Email" %>
+<%# <% end %> 
+
+<%= form_with model: EmailContact.new do |form| %>
+  <%= form.label :name %>
+  <%= form.text_field :name %>
+  <%= form.label :email %>
+  <%= form.text_field :email %>
+
+  <%= form.submit "Send Email" %>
+<% end %>
+
+<%= render @email_contact %>
