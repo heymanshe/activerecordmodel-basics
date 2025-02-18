@@ -283,3 +283,153 @@ puts person.full_name  # => "Joe Doe"
 ## Method Naming Restrictions
 
 - Ensure method names for dynamically generated methods follow the syntax correctly to avoid `NoMethodError`.
+
+# 6. ActiveModel::Callbacks
+
+`ActiveModel::Callbacks` gives plain Ruby objects Active Record-style callbacks. It allows you to hook into model lifecycle events like `before_update`, `after_create`, etc., and define custom logic at specific lifecycle points.
+
+## Steps to Implement Callbacks
+
+1. **Extend `ActiveModel::Callbacks`** within your class.
+2. **Define Callbacks** with `define_model_callbacks` for specific lifecycle events. For example, using `:update` automatically includes `before`, `around`, and `after` callbacks.
+3. **Use `run_callbacks`** to trigger the callback chain when the event is called.
+
+```ruby
+class Person
+  extend ActiveModel::Callbacks
+
+  define_model_callbacks :update
+
+  before_update :reset_me
+  after_update :finalize_me
+  around_update :log_me
+
+  def update
+    run_callbacks(:update) do
+      puts "update method called"
+    end
+  end
+
+  private
+    def reset_me
+      puts "reset_me method: called before the update method"
+    end
+
+    def finalize_me
+      puts "finalize_me method: called after the update method"
+    end
+
+    def log_me
+      puts "log_me method: called around the update method"
+      yield
+      puts "log_me method: block successfully called"
+    end
+end
+```
+
+### Callback Execution Order
+
+- When calling person.update, the following sequence will happen:
+
+```bash
+reset_me method: called before the update method
+log_me method: called around the update method
+update method called
+log_me method: block successfully called
+finalize_me method: called after the update method
+```
+
+- `before_*`: Runs before the specified action.
+- `after_*`: Runs after the specified action.
+- `around_*`: Runs before and after the specified action. Make sure to yield within the block to allow the action to proceed.
+
+### Defining Specific Callbacks
+
+- You can define specific callbacks by using the only option in define_model_callbacks:
+
+```bash
+define_model_callbacks :update, :create, only: [:after, :before]
+```
+
+- This will only create `before_*` and `after_*` callbacks and skip `around_*`.
+
+- It’s possible to call define_model_callbacks multiple times for different lifecycle events:
+
+```ruby
+define_model_callbacks :create, only: :after
+define_model_callbacks :update, only: :before
+define_model_callbacks :destroy, only: :around
+```
+
+### Defining Callbacks with a Class
+
+- You can pass a class to the callback methods for more control. The class should define the <action>_<type> method:
+
+```ruby
+class Person
+  extend ActiveModel::Callbacks
+
+  define_model_callbacks :create
+  before_create PersonCallbacks
+end
+
+class PersonCallbacks
+  def self.before_create(obj)
+    # obj is the Person instance
+  end
+end
+```
+
+### Aborting Callbacks
+
+- Callbacks can be aborted by throwing `:abort`, preventing the remainder of the callback chain from executing:
+
+```ruby
+class Person
+  extend ActiveModel::Callbacks
+
+  define_model_callbacks :update
+
+  before_update :reset_me
+  after_update :finalize_me
+  around_update :log_me
+
+  def update
+    run_callbacks(:update) do
+      puts "update method called"
+    end
+  end
+
+  private
+    def reset_me
+      puts "reset_me method: called before the update method"
+      throw :abort  # This will stop the callback chain
+    end
+
+    def finalize_me
+      puts "finalize_me method: called after the update method"
+    end
+
+    def log_me
+      puts "log_me method: called around the update method"
+      yield
+      puts "log_me method: block successfully called"
+    end
+end
+```
+
+- If `:abort` is thrown before executing the main action, the callback chain stops and the action won’t run:
+
+```bash
+reset_me method: called before the update method
+=> false
+```
+
+### Key Points
+
+- `method_name` passed to `define_model_callbacks` should not end with `!`, `?`, or `=`.
+
+- Defining the same callback multiple times will overwrite previous definitions.
+
+- Use `yield` in `around_*` callbacks to ensure the action is executed.
+
